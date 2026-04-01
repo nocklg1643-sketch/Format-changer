@@ -151,32 +151,32 @@ const LOCAL_FORMATS = {
 
 const HIGH_FIDELITY_ENTRIES = [
   {
-    id: "doc-pdf",
-    title: "DOC -> PDF",
-    description: "適合舊版 Word 檔，建議交給專業文件引擎處理，避免版面跑掉。",
-    label: "使用專業工具",
-    url: "https://www.ilovepdf.com/",
+    id: "pdf-docx",
+    title: "PDF -> DOCX",
+    description: "需要完整保留字型、段落、圖片與頁面配置時，建議使用高保真服務。",
+    label: "使用外部網站",
+    url: "https://www.ilovepdf.com/zh-tw/pdf_to_word",
   },
   {
     id: "docx-pdf",
     title: "DOCX -> PDF",
     description: "需要完整保留字型、段落、圖片與頁面配置時，建議使用高保真服務。",
-    label: "使用專業工具",
-    url: "https://www.ilovepdf.com/",
+    label: "使用外部網站",
+    url: "https://www.ilovepdf.com/zh-tw/word_to_pdf",
   },
   {
-    id: "ppt-pdf",
-    title: "PPT -> PDF",
-    description: "適合舊版 PowerPoint 簡報，建議使用專業文件引擎保持投影片樣式。",
-    label: "使用專業工具",
-    url: "https://www.ilovepdf.com/",
+    id: "pdf-pptx",
+    title: "PDF -> PPTX",
+    description: "如果你希望完整保留圖片、字型、位置與投影片版面，請先走高保真路線。",
+    label: "使用外部網站",
+    url: "https://www.ilovepdf.com/zh-tw/pdf_to_powerpoint",
   },
   {
     id: "pptx-pdf",
     title: "PPTX -> PDF",
     description: "如果你希望完整保留圖片、字型、位置與投影片版面，請先走高保真路線。",
-    label: "使用專業工具",
-    url: "https://www.ilovepdf.com/",
+    label: "使用外部網站",
+    url: "https://www.ilovepdf.com/zh-tw/powerpoint_to_pdf",
   },
 ];
 

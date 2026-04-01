@@ -21,6 +21,8 @@ const els = {
   resultTitle: document.getElementById("resultTitle"),
   resultSummary: document.getElementById("resultSummary"),
   downloadBtn: document.getElementById("downloadBtn"),
+  shareBtn: document.getElementById("shareBtn"),
+  shareHint: document.getElementById("shareHint"),
   supportList: document.getElementById("supportList"),
   officeGrid: document.getElementById("officeGrid"),
 };
@@ -242,7 +244,7 @@ function bindEvents() {
 
   els.convertBtn.addEventListener("click", runConversion);
   els.clearBtn.addEventListener("click", resetApp);
-  els.downloadBtn.addEventListener("click", handleDownloadAction);
+  els.shareBtn.addEventListener("click", handleShareAction);
 }
 
 async function handleFile(file) {
@@ -585,10 +587,12 @@ async function runConversion() {
       fileName: downloadName,
       mimeType: result.blob.type || guessMimeTypeFromExtension(currentTarget),
       url: downloadUrl,
+      extension: currentTarget,
     };
     els.downloadBtn.href = downloadUrl;
     els.downloadBtn.download = downloadName;
     els.downloadBtn.classList.remove("disabled");
+    updateShareUi();
     els.resultTitle.textContent = downloadName;
     els.resultSummary.innerHTML = `
       <p><span class="status-ok">轉換完成</span></p>
@@ -1156,6 +1160,9 @@ function resetResult() {
   els.downloadBtn.classList.add("disabled");
   els.downloadBtn.removeAttribute("href");
   latestOutput = null;
+  els.shareBtn.classList.add("hidden");
+  els.shareHint.classList.add("hidden");
+  els.shareHint.textContent = "";
 }
 
 function clearDownloadUrl() {
@@ -1186,13 +1193,30 @@ function resetApp() {
   resetResult();
 }
 
-async function handleDownloadAction(event) {
+async function handleShareAction(event) {
   if (!latestOutput) {
     return;
   }
 
-  if (!shouldUseNativeShare()) {
-    return;
+  try {
+    const shareData = buildShareData();
+    if (!shareData) {
+      triggerDownloadFallback();
+      return;
+    }
+
+    event.preventDefault();
+    await navigator.share(shareData);
+  } catch (error) {
+    if (error?.name !== "AbortError") {
+      triggerDownloadFallback();
+    }
+  }
+}
+
+function buildShareData() {
+  if (!supportsFileShare()) {
+    return null;
   }
 
   const shareFile = new File([latestOutput.blob], latestOutput.fileName, {
@@ -1205,42 +1229,52 @@ async function handleDownloadAction(event) {
     title: latestOutput.fileName,
   };
 
-  const canShareFiles =
-    typeof navigator.canShare === "function" ? navigator.canShare(shareData) : true;
-
-  if (!canShareFiles || typeof navigator.share !== "function") {
-    return;
+  if (typeof navigator.canShare === "function" && !navigator.canShare(shareData)) {
+    return null;
   }
 
-  event.preventDefault();
-
-  try {
-    await navigator.share(shareData);
-  } catch (error) {
-    if (error?.name !== "AbortError") {
-      window.location.href = latestOutput.url;
-    }
-  }
+  return shareData;
 }
 
-function shouldUseNativeShare() {
-  const hasShare = typeof navigator.share === "function";
-  if (!hasShare) {
-    return false;
-  }
-
-  return isAppleMobileDevice();
+function supportsFileShare() {
+  return isMobileDevice() && typeof navigator.share === "function";
 }
 
-function isAppleMobileDevice() {
+function isMobileDevice() {
   const ua = navigator.userAgent || "";
   const platform = navigator.platform || "";
   const maxTouchPoints = navigator.maxTouchPoints || 0;
 
   return (
-    /iPhone|iPad|iPod/i.test(ua) ||
+    /Android|iPhone|iPad|iPod/i.test(ua) ||
     (/Mac/i.test(platform) && maxTouchPoints > 1)
   );
+}
+
+function updateShareUi() {
+  const canShareFiles = !!buildShareData();
+  const shouldShowShare = canShareFiles;
+
+  els.shareBtn.classList.toggle("hidden", !shouldShowShare);
+
+  if (!latestOutput || !shouldShowShare) {
+    els.shareHint.classList.add("hidden");
+    els.shareHint.textContent = "";
+    return;
+  }
+
+  const isImage = /^image\//.test(latestOutput.mimeType);
+  els.shareHint.textContent = isImage
+    ? "手機上可用分享面板嘗試儲存到照片，或分享到檔案、AirDrop、WhatsApp、Discord 等支援的 App。"
+    : "PDF 或文件類型通常會分享到「檔案」或支援該檔案類型的 App，例如 AirDrop、WhatsApp、Discord 等。";
+  els.shareHint.classList.remove("hidden");
+}
+
+function triggerDownloadFallback() {
+  if (!latestOutput?.url) {
+    return;
+  }
+  els.downloadBtn.click();
 }
 
 function guessMimeTypeFromExtension(extension) {

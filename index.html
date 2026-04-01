@@ -124,8 +124,12 @@
                   <span class="pane-label">轉換結果</span>
                   <h3 id="resultTitle">尚未產生輸出檔</h3>
                 </div>
-                <a id="downloadBtn" class="primary-btn disabled" download>下載檔案</a>
+                <div class="result-actions">
+                  <button id="shareBtn" class="secondary-btn hidden" type="button">分享檔案</button>
+                  <a id="downloadBtn" class="primary-btn disabled" download>下載檔案</a>
+                </div>
               </div>
+              <div id="shareHint" class="share-hint hidden"></div>
               <div id="resultSummary" class="result-summary">
                 轉換完成後，這裡會顯示輸出格式、檔名與處理摘要。
               </div>

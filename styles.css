@@ -168,6 +168,14 @@ body {
   gap: 12px;
 }
 
+.result-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
 .type-badge {
   display: inline-flex;
   align-items: center;
@@ -237,6 +245,7 @@ body {
 .dropzone-hint,
 .office-link,
 .primary-btn,
+#shareBtn,
 #downloadBtn {
   display: inline-flex;
   align-items: center;
@@ -409,6 +418,7 @@ body {
 
 select,
 .primary-btn,
+.secondary-btn,
 .ghost-btn,
 #downloadBtn {
   border: 0;
@@ -460,6 +470,32 @@ select {
   box-shadow: 0 14px 26px rgba(35, 100, 170, 0.18);
   cursor: pointer;
   transition: transform 180ms ease, opacity 180ms ease;
+}
+
+.secondary-btn {
+  color: var(--accent-strong);
+  background: rgba(35, 100, 170, 0.1);
+  border: 1px solid rgba(35, 100, 170, 0.18);
+  cursor: pointer;
+  transition: transform 180ms ease, opacity 180ms ease;
+}
+
+.secondary-btn:hover {
+  transform: translateY(-1px);
+}
+
+.hidden {
+  display: none !important;
+}
+
+.share-hint {
+  margin: 6px 0 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(35, 100, 170, 0.08);
+  color: var(--muted);
+  font-size: 0.92rem;
+  line-height: 1.65;
 }
 
 .primary-btn:hover,

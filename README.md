@@ -34,6 +34,8 @@
 - `PDF -> DOCX`（輕量文字擷取路線）
 - `DOCX -> TXT / HTML / PDF`（輕量轉換）
 - `PPTX -> TXT / HTML / PDF`（以可擷取文字為主）
+- `PDF 合併`
+- `PDF 拆分`（可用頁碼範圍，例如 `1-3,5`）
 
 ## 哪些功能目前只是入口 / 預留
 
@@ -41,8 +43,9 @@
 
 - `DOC -> PDF`
 - `DOCX -> PDF`
-- `PPT -> PDF`
+- `PDF -> PPTX`
 - `PPTX -> PDF`
+- `PDF -> DOCX`
 
 目前做法是：
 

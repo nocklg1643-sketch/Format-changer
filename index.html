@@ -25,9 +25,9 @@
           </p>
         </div>
         <div class="hero-note">
-          <span>本地運行的公開透明網站</span>
+          <span>在瀏覽器裡直接處理，不用安裝</span>
           <strong>手機、平板、電腦都能打開</strong>
-          <small>適合私下分享，搜索引擎搜不到。</small>
+          <small>適合私下分享，也已降低被搜尋引擎收錄的機率。</small>
         </div>
       </header>
 
@@ -39,7 +39,7 @@
               <h2>轉換常見檔案格式</h2>
             </div>
             <p class="section-desc">
-              上傳後會自動判斷來源格式，右側只顯示可用的目標格式。
+              上傳後會自動判斷來源格式，右側只顯示可用的目標格式；如果你要整理 PDF，也可以直接在這裡合併或拆分。
             </p>
           </div>
 
@@ -117,6 +117,55 @@
             </article>
           </section>
 
+          <section class="pdf-toolkit">
+            <article class="tool-card">
+              <div class="tool-card-headline">
+                <div>
+                  <p class="section-tag">PDF 工具</p>
+                  <h3>合併 PDF</h3>
+                </div>
+                <span class="type-badge muted">本地處理</span>
+              </div>
+              <p>可一次加入多份 PDF，也可以分次慢慢加。你可以看到每份檔案名稱、大小，並自行調整合併順序。</p>
+              <div class="tool-dropzone" id="mergePdfDropzone" role="button" tabindex="0" aria-controls="mergePdfInput">
+                <input id="mergePdfInput" class="hidden-input" type="file" accept=".pdf,application/pdf" multiple />
+                <div class="dropzone-icon">+</div>
+                <div>
+                  <strong>拖曳 PDF 到這裡，或點一下選擇檔案</strong>
+                  <p>可一次選多份，也可以之後再繼續加入。</p>
+                  <span class="dropzone-hint">選擇檔案</span>
+                </div>
+              </div>
+              <div id="mergePdfList" class="file-list empty-list">尚未加入 PDF。</div>
+              <button id="mergePdfBtn" class="secondary-btn" type="button">開始轉換</button>
+              <div id="mergePdfStatus" class="tool-status">請先加入兩個以上的 PDF，再調整順序後開始轉換。</div>
+            </article>
+
+            <article class="tool-card">
+              <div class="tool-card-headline">
+                <div>
+                  <p class="section-tag">PDF 工具</p>
+                  <h3>拆分 PDF</h3>
+                </div>
+                <span class="type-badge muted">本地處理</span>
+              </div>
+              <p>可輸入頁碼範圍，例如 `1-3,5`，把指定頁面抽出成新的 PDF。</p>
+              <div class="tool-dropzone" id="splitPdfDropzone" role="button" tabindex="0" aria-controls="splitPdfInput">
+                <input id="splitPdfInput" class="hidden-input" type="file" accept=".pdf,application/pdf" />
+                <div class="dropzone-icon">+</div>
+                <div>
+                  <strong>拖曳一份 PDF 到這裡，或點一下選擇檔案</strong>
+                  <p>選好檔案後，再輸入要保留的頁碼範圍。</p>
+                  <span class="dropzone-hint">選擇檔案</span>
+                </div>
+              </div>
+              <div id="splitPdfFileInfo" class="file-list empty-list">尚未選擇 PDF。</div>
+              <input id="splitPdfPages" class="page-range-input" type="text" placeholder="例如：1-3,5" />
+              <button id="splitPdfBtn" class="secondary-btn" type="button">開始轉換</button>
+              <div id="splitPdfStatus" class="tool-status">先選 PDF，再輸入要保留的頁碼範圍。</div>
+            </article>
+          </section>
+
           <section class="bottom-grid">
             <article class="result-card">
               <div class="result-header">
@@ -150,8 +199,8 @@
               <h2>高保真 Office 與 PDF轉換</h2>
             </div>
             <p class="section-desc">
-              如果你希望完整保留版面、圖片、字型與投影片樣式，這類轉換需要專業文件引擎。
-              目前這一版不在瀏覽器內硬做低品質轉換，而是先提供高保真入口與後續擴充位置。
+              如果你希望完整保留版面、圖片、字型與投影片樣式，這類轉換通常需要專業文件引擎。
+              這一版先保留輕量本地轉換，同時提供高保真入口，讓你自行選擇。
             </p>
           </div>
 
@@ -160,8 +209,8 @@
           <article class="office-note">
             <h3>說明</h3>
             <p>
-              點擊後會前往外部網站，或保留給未來串接 API / 後端時使用。
-              這樣可以先維持工具輕量、好部署，也避免讓使用者誤以為目前已經能在瀏覽器內完美轉 Office 成 PDF。
+              點擊後會前往外部網站，未來也可以改成串接自己的 API 或後端。
+              這樣能先維持工具輕量、好部署，同時避免把本地輕量轉換誤認成高保真轉換。
             </p>
           </article>
         </section>

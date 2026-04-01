@@ -23,6 +23,17 @@ const els = {
   downloadBtn: document.getElementById("downloadBtn"),
   shareBtn: document.getElementById("shareBtn"),
   shareHint: document.getElementById("shareHint"),
+  mergePdfInput: document.getElementById("mergePdfInput"),
+  mergePdfDropzone: document.getElementById("mergePdfDropzone"),
+  mergePdfBtn: document.getElementById("mergePdfBtn"),
+  mergePdfStatus: document.getElementById("mergePdfStatus"),
+  mergePdfList: document.getElementById("mergePdfList"),
+  splitPdfInput: document.getElementById("splitPdfInput"),
+  splitPdfDropzone: document.getElementById("splitPdfDropzone"),
+  splitPdfFileInfo: document.getElementById("splitPdfFileInfo"),
+  splitPdfPages: document.getElementById("splitPdfPages"),
+  splitPdfBtn: document.getElementById("splitPdfBtn"),
+  splitPdfStatus: document.getElementById("splitPdfStatus"),
   supportList: document.getElementById("supportList"),
   officeGrid: document.getElementById("officeGrid"),
 };
@@ -153,29 +164,29 @@ const HIGH_FIDELITY_ENTRIES = [
   {
     id: "pdf-docx",
     title: "PDF -> DOCX",
-    description: "需要完整保留字型、段落、圖片與頁面配置時，建議使用高保真服務。",
-    label: "使用外部網站",
+    description: "如果你希望轉出可編輯的 Word，並盡量保留原本排版，可改走高保真服務。",
+    label: "使用專業工具",
     url: "https://www.ilovepdf.com/zh-tw/pdf_to_word",
   },
   {
     id: "docx-pdf",
     title: "DOCX -> PDF",
     description: "需要完整保留字型、段落、圖片與頁面配置時，建議使用高保真服務。",
-    label: "使用外部網站",
+    label: "使用專業工具",
     url: "https://www.ilovepdf.com/zh-tw/word_to_pdf",
   },
   {
     id: "pdf-pptx",
     title: "PDF -> PPTX",
-    description: "如果你希望完整保留圖片、字型、位置與投影片版面，請先走高保真路線。",
-    label: "使用外部網站",
+    description: "如果你希望轉成可編輯投影片，並保留更多版面資訊，可改走高保真服務。",
+    label: "使用專業工具",
     url: "https://www.ilovepdf.com/zh-tw/pdf_to_powerpoint",
   },
   {
     id: "pptx-pdf",
     title: "PPTX -> PDF",
     description: "如果你希望完整保留圖片、字型、位置與投影片版面，請先走高保真路線。",
-    label: "使用外部網站",
+    label: "使用專業工具",
     url: "https://www.ilovepdf.com/zh-tw/powerpoint_to_pdf",
   },
 ];
@@ -185,6 +196,7 @@ const supportSummary = [
   ["表格", "CSV / XLSX 可輸出成 CSV、JSON、HTML、PDF 摘要。"],
   ["圖片", "JPG / PNG / WEBP 可互轉，並可整理成 PDF。"],
   ["PDF / 文件", "PDF 可做輕量文字擷取；DOCX / PPTX 可做輕量文字型轉換。"],
+  ["PDF 小工具", "可直接在瀏覽器裡合併 PDF，或依頁碼範圍拆分 PDF。"],
 ];
 
 let currentFile = null;
@@ -192,6 +204,7 @@ let currentFormat = null;
 let currentTarget = null;
 let activeDownloadUrl = null;
 let latestOutput = null;
+let mergePdfFiles = [];
 
 init();
 
@@ -245,6 +258,25 @@ function bindEvents() {
   els.convertBtn.addEventListener("click", runConversion);
   els.clearBtn.addEventListener("click", resetApp);
   els.shareBtn.addEventListener("click", handleShareAction);
+  els.mergePdfBtn.addEventListener("click", handleMergePdf);
+  els.splitPdfBtn.addEventListener("click", handleSplitPdf);
+  bindPdfDropzone(els.mergePdfDropzone, els.mergePdfInput, {
+    multiple: true,
+    onFiles: appendMergePdfFiles,
+  });
+  bindPdfDropzone(els.splitPdfDropzone, els.splitPdfInput, {
+    multiple: false,
+    onFiles: setSplitPdfFile,
+  });
+  els.mergePdfInput.addEventListener("change", () => {
+    appendMergePdfFiles(Array.from(els.mergePdfInput.files || []));
+    els.mergePdfInput.value = "";
+  });
+  els.splitPdfInput.addEventListener("change", () => {
+    const [file] = els.splitPdfInput.files || [];
+    setSplitPdfFile(file || null);
+    els.splitPdfInput.value = "";
+  });
 }
 
 async function handleFile(file) {
@@ -359,7 +391,7 @@ function renderOfficeEntries() {
       <article class="office-card">
         <div class="office-card-head">
           <h3>${entry.title}</h3>
-          <span class="type-badge muted">高保真</span>
+          <span class="type-badge muted">外部網站</span>
         </div>
         <p>${entry.description}</p>
         <small>目前先導向外部專業服務，未來可在這裡改接自己的 API / 後端。</small>
@@ -1177,7 +1209,11 @@ function resetApp() {
   currentFile = null;
   currentFormat = null;
   currentTarget = null;
+  mergePdfFiles = [];
   els.fileInput.value = "";
+  els.mergePdfInput.value = "";
+  els.splitPdfInput.value = "";
+  els.splitPdfPages.value = "";
   els.sourceBadge.textContent = "尚未上傳";
   els.targetBadge.textContent = "請先選擇";
   els.fileName.textContent = "-";
@@ -1190,7 +1226,297 @@ function resetApp() {
   els.previewContent.className = "preview-content empty";
   els.previewContent.textContent = "上傳檔案後，這裡會顯示預覽、頁面縮圖或文字摘要。";
   els.convertBtn.disabled = true;
+  els.mergePdfList.className = "file-list empty-list";
+  els.mergePdfList.textContent = "尚未加入 PDF。";
+  els.mergePdfStatus.textContent = "請先加入兩個以上的 PDF，再調整順序後開始轉換。";
+  els.splitPdfFileInfo.className = "file-list empty-list";
+  els.splitPdfFileInfo.textContent = "尚未選擇 PDF。";
+  els.splitPdfStatus.textContent = "先選 PDF，再輸入要保留的頁碼範圍。";
   resetResult();
+}
+
+async function handleMergePdf() {
+  if (mergePdfFiles.length < 2) {
+    els.mergePdfStatus.textContent = "請至少選擇兩個 PDF。";
+    return;
+  }
+
+  els.mergePdfBtn.disabled = true;
+  els.mergePdfStatus.textContent = "正在合併 PDF...";
+
+  try {
+    const mergedPdf = await PDFDocument.create();
+
+    for (const file of mergePdfFiles) {
+      const sourcePdf = await PDFDocument.load(await file.arrayBuffer());
+      const copiedPages = await mergedPdf.copyPages(sourcePdf, sourcePdf.getPageIndices());
+      copiedPages.forEach((page) => mergedPdf.addPage(page));
+    }
+
+    const blob = new Blob([await mergedPdf.save()], { type: "application/pdf" });
+    const fileName = buildMergedPdfName(mergePdfFiles);
+    presentGeneratedFile(blob, fileName, "已完成 PDF 合併。");
+    els.mergePdfStatus.textContent = `已合併 ${mergePdfFiles.length} 個 PDF。`;
+  } catch (error) {
+    els.mergePdfStatus.textContent = error.message || "合併失敗，請再試一次。";
+  } finally {
+    els.mergePdfBtn.disabled = false;
+  }
+}
+
+async function handleSplitPdf() {
+  const file = getSelectedSplitPdf();
+  const rangeText = els.splitPdfPages.value.trim();
+
+  if (!file) {
+    els.splitPdfStatus.textContent = "請先選擇一個 PDF。";
+    return;
+  }
+
+  if (!rangeText) {
+    els.splitPdfStatus.textContent = "請先輸入頁碼範圍，例如 1-3,5。";
+    return;
+  }
+
+  els.splitPdfBtn.disabled = true;
+  els.splitPdfStatus.textContent = "正在拆分 PDF...";
+
+  try {
+    const sourcePdf = await PDFDocument.load(await file.arrayBuffer());
+    const pageIndexes = parsePageRanges(rangeText, sourcePdf.getPageCount());
+
+    if (!pageIndexes.length) {
+      throw new Error("找不到可拆出的頁碼，請檢查輸入格式。");
+    }
+
+    const nextPdf = await PDFDocument.create();
+    const copiedPages = await nextPdf.copyPages(sourcePdf, pageIndexes);
+    copiedPages.forEach((page) => nextPdf.addPage(page));
+
+    const blob = new Blob([await nextPdf.save()], { type: "application/pdf" });
+    const fileName = buildSplitPdfName(file.name);
+    presentGeneratedFile(blob, fileName, `已從原 PDF 取出 ${pageIndexes.length} 頁。`);
+    els.splitPdfStatus.textContent = `已拆出 ${pageIndexes.length} 頁。`;
+  } catch (error) {
+    els.splitPdfStatus.textContent = error.message || "拆分失敗，請再試一次。";
+  } finally {
+    els.splitPdfBtn.disabled = false;
+  }
+}
+
+async function presentGeneratedFile(blob, fileName, summary) {
+  const extension = fileName.includes(".") ? fileName.split(".").pop() : "";
+  const downloadUrl = URL.createObjectURL(blob);
+
+  clearDownloadUrl();
+  activeDownloadUrl = downloadUrl;
+  latestOutput = {
+    blob,
+    fileName,
+    mimeType: blob.type || guessMimeTypeFromExtension(extension),
+    url: downloadUrl,
+    extension,
+  };
+
+  els.downloadBtn.href = downloadUrl;
+  els.downloadBtn.download = fileName;
+  els.downloadBtn.classList.remove("disabled");
+  updateShareUi();
+  els.resultTitle.textContent = fileName;
+  els.resultSummary.innerHTML = `
+    <p><span class="status-ok">處理完成</span></p>
+    <p>${summary}</p>
+  `;
+}
+
+function buildMergedPdfName(files) {
+  const firstName = files[0]?.name || "merged";
+  const base = firstName.includes(".") ? firstName.replace(/\.[^.]+$/, "") : firstName;
+  return `${base}-merged.pdf`;
+}
+
+function buildSplitPdfName(fileName) {
+  const base = fileName.includes(".") ? fileName.replace(/\.[^.]+$/, "") : fileName;
+  return `${base}-split.pdf`;
+}
+
+function appendMergePdfFiles(files) {
+  const nextFiles = files.filter((file) => !mergePdfFiles.some((existing) => sameFile(existing, file)));
+  mergePdfFiles = [...mergePdfFiles, ...nextFiles];
+  renderMergePdfList();
+  if (!files.length) {
+    els.mergePdfStatus.textContent = "這次沒有加入新檔案。";
+    return;
+  }
+
+  if (!nextFiles.length) {
+    els.mergePdfStatus.textContent = "你選的 PDF 已經在清單裡了。";
+    return;
+  }
+
+  els.mergePdfStatus.textContent =
+    mergePdfFiles.length >= 2
+      ? `已加入 ${nextFiles.length} 個 PDF，可直接開始轉換，或先調整檔案順序。`
+      : "已加入一個 PDF，請再加入至少一個。";
+}
+
+function setSplitPdfFile(file) {
+  if (!file) {
+    els.splitPdfInput._selectedFile = null;
+    els.splitPdfFileInfo.className = "file-list empty-list";
+    els.splitPdfFileInfo.textContent = "尚未選擇 PDF。";
+    return;
+  }
+
+  els.splitPdfInput._selectedFile = file;
+  els.splitPdfFileInfo.className = "file-list";
+  els.splitPdfFileInfo.innerHTML = `
+    <div class="file-item">
+      <div>
+        <strong>${escapeHtml(file.name)}</strong>
+        <small>${formatFileSize(file.size)}</small>
+      </div>
+    </div>
+  `;
+  els.splitPdfStatus.textContent = "已選好 PDF，接著輸入要保留的頁碼範圍。";
+}
+
+function getSelectedSplitPdf() {
+  return els.splitPdfInput._selectedFile || null;
+}
+
+function renderMergePdfList() {
+  if (!mergePdfFiles.length) {
+    els.mergePdfList.className = "file-list empty-list";
+    els.mergePdfList.textContent = "尚未加入 PDF。";
+    return;
+  }
+
+  els.mergePdfList.className = "file-list";
+  els.mergePdfList.innerHTML = mergePdfFiles
+    .map((file, index) => {
+      return `
+        <div class="file-item">
+          <div>
+            <strong>${escapeHtml(file.name)}</strong>
+            <small>${formatFileSize(file.size)}</small>
+          </div>
+          <div class="file-item-actions">
+            <button class="mini-btn" type="button" data-action="up" data-index="${index}">上移</button>
+            <button class="mini-btn" type="button" data-action="down" data-index="${index}">下移</button>
+            <button class="mini-btn" type="button" data-action="remove" data-index="${index}">移除</button>
+          </div>
+        </div>
+      `;
+    })
+    .join("");
+
+  els.mergePdfList.querySelectorAll(".mini-btn").forEach((button) => {
+    button.addEventListener("click", () => {
+      const index = Number(button.dataset.index);
+      const action = button.dataset.action;
+      updateMergePdfOrder(action, index);
+    });
+  });
+}
+
+function updateMergePdfOrder(action, index) {
+  if (action === "remove") {
+    mergePdfFiles.splice(index, 1);
+  }
+
+  if (action === "up" && index > 0) {
+    [mergePdfFiles[index - 1], mergePdfFiles[index]] = [mergePdfFiles[index], mergePdfFiles[index - 1]];
+  }
+
+  if (action === "down" && index < mergePdfFiles.length - 1) {
+    [mergePdfFiles[index + 1], mergePdfFiles[index]] = [mergePdfFiles[index], mergePdfFiles[index + 1]];
+  }
+
+  renderMergePdfList();
+  els.mergePdfStatus.textContent =
+    mergePdfFiles.length >= 2
+      ? "可直接開始轉換，或繼續調整檔案順序。"
+      : "請至少保留兩個 PDF。";
+}
+
+function sameFile(left, right) {
+  return (
+    left.name === right.name &&
+    left.size === right.size &&
+    left.lastModified === right.lastModified
+  );
+}
+
+function bindPdfDropzone(dropzone, input, options) {
+  dropzone.addEventListener("click", () => {
+    input.click();
+  });
+
+  dropzone.addEventListener("keydown", (event) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      input.click();
+    }
+  });
+
+  dropzone.addEventListener("dragover", (event) => {
+    event.preventDefault();
+    dropzone.classList.add("dragover");
+  });
+
+  dropzone.addEventListener("dragleave", () => {
+    dropzone.classList.remove("dragover");
+  });
+
+  dropzone.addEventListener("drop", (event) => {
+    event.preventDefault();
+    dropzone.classList.remove("dragover");
+    const droppedFiles = Array.from(event.dataTransfer.files || []).filter((file) =>
+      file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf")
+    );
+
+    if (!droppedFiles.length) {
+      return;
+    }
+
+    if (options.multiple) {
+      options.onFiles(droppedFiles);
+    } else {
+      options.onFiles(droppedFiles[0]);
+    }
+  });
+}
+
+function parsePageRanges(input, totalPages) {
+  const pages = new Set();
+  const parts = input.split(",").map((value) => value.trim()).filter(Boolean);
+
+  for (const part of parts) {
+    if (/^\d+$/.test(part)) {
+      const page = Number(part);
+      if (page >= 1 && page <= totalPages) {
+        pages.add(page - 1);
+      }
+      continue;
+    }
+
+    const rangeMatch = part.match(/^(\d+)-(\d+)$/);
+    if (rangeMatch) {
+      let start = Number(rangeMatch[1]);
+      let end = Number(rangeMatch[2]);
+      if (start > end) {
+        [start, end] = [end, start];
+      }
+      for (let page = start; page <= end; page += 1) {
+        if (page >= 1 && page <= totalPages) {
+          pages.add(page - 1);
+        }
+      }
+    }
+  }
+
+  return [...pages].sort((a, b) => a - b);
 }
 
 async function handleShareAction(event) {

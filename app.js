@@ -189,6 +189,7 @@ let currentFile = null;
 let currentFormat = null;
 let currentTarget = null;
 let activeDownloadUrl = null;
+let latestOutput = null;
 
 init();
 
@@ -241,6 +242,7 @@ function bindEvents() {
 
   els.convertBtn.addEventListener("click", runConversion);
   els.clearBtn.addEventListener("click", resetApp);
+  els.downloadBtn.addEventListener("click", handleDownloadAction);
 }
 
 async function handleFile(file) {
@@ -578,6 +580,12 @@ async function runConversion() {
 
     clearDownloadUrl();
     activeDownloadUrl = downloadUrl;
+    latestOutput = {
+      blob: result.blob,
+      fileName: downloadName,
+      mimeType: result.blob.type || guessMimeTypeFromExtension(currentTarget),
+      url: downloadUrl,
+    };
     els.downloadBtn.href = downloadUrl;
     els.downloadBtn.download = downloadName;
     els.downloadBtn.classList.remove("disabled");
@@ -1147,6 +1155,7 @@ function resetResult() {
   els.resultSummary.textContent = "轉換完成後，這裡會顯示輸出格式、檔名與處理摘要。";
   els.downloadBtn.classList.add("disabled");
   els.downloadBtn.removeAttribute("href");
+  latestOutput = null;
 }
 
 function clearDownloadUrl() {
@@ -1175,4 +1184,81 @@ function resetApp() {
   els.previewContent.textContent = "上傳檔案後，這裡會顯示預覽、頁面縮圖或文字摘要。";
   els.convertBtn.disabled = true;
   resetResult();
+}
+
+async function handleDownloadAction(event) {
+  if (!latestOutput) {
+    return;
+  }
+
+  if (!shouldUseNativeShare()) {
+    return;
+  }
+
+  const shareFile = new File([latestOutput.blob], latestOutput.fileName, {
+    type: latestOutput.mimeType,
+    lastModified: Date.now(),
+  });
+
+  const shareData = {
+    files: [shareFile],
+    title: latestOutput.fileName,
+  };
+
+  const canShareFiles =
+    typeof navigator.canShare === "function" ? navigator.canShare(shareData) : true;
+
+  if (!canShareFiles || typeof navigator.share !== "function") {
+    return;
+  }
+
+  event.preventDefault();
+
+  try {
+    await navigator.share(shareData);
+  } catch (error) {
+    if (error?.name !== "AbortError") {
+      window.location.href = latestOutput.url;
+    }
+  }
+}
+
+function shouldUseNativeShare() {
+  const hasShare = typeof navigator.share === "function";
+  if (!hasShare) {
+    return false;
+  }
+
+  return isAppleMobileDevice();
+}
+
+function isAppleMobileDevice() {
+  const ua = navigator.userAgent || "";
+  const platform = navigator.platform || "";
+  const maxTouchPoints = navigator.maxTouchPoints || 0;
+
+  return (
+    /iPhone|iPad|iPod/i.test(ua) ||
+    (/Mac/i.test(platform) && maxTouchPoints > 1)
+  );
+}
+
+function guessMimeTypeFromExtension(extension) {
+  const mimeMap = {
+    txt: "text/plain;charset=utf-8",
+    md: "text/markdown;charset=utf-8",
+    html: "text/html;charset=utf-8",
+    json: "application/json;charset=utf-8",
+    xml: "application/xml;charset=utf-8",
+    csv: "text/csv;charset=utf-8",
+    xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    pdf: "application/pdf",
+    jpg: "image/jpeg",
+    jpeg: "image/jpeg",
+    png: "image/png",
+    webp: "image/webp",
+    docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  };
+
+  return mimeMap[String(extension || "").toLowerCase()] || "application/octet-stream";
 }

@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>格式轉換</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;800&family=Space+Grotesk:wght@500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="hero">
+        <div class="hero-copy">
+          <p class="eyebrow">格式轉換</p>
+          <h1>快速格式轉換</h1>
+          <p>
+            這是一個適合私下分享的輕量網址工具。瀏覽器能穩定處理的格式，會直接在你的裝置上完成；
+            需要完整保留版面、圖片與字型的 Office 轉 PDF，則先提供專業高保真入口。
+          </p>
+        </div>
+        <div class="hero-note">
+          <span>這一版適合做成私下分享網址</span>
+          <strong>手機、平板、電腦都能打開</strong>
+          <small>已加入 `noindex` 設定，降低被搜尋引擎收錄的機率。</small>
+        </div>
+      </header>
+
+      <main class="layout">
+        <section class="section-block">
+          <div class="section-head">
+            <div>
+              <p class="section-tag">區塊 1</p>
+              <h2>把常見檔案整理成更好分享的格式</h2>
+            </div>
+            <p class="section-desc">
+              適合瀏覽器可直接處理的輕量格式。上傳後會自動判斷來源格式，右側只顯示可用的目標格式。
+            </p>
+          </div>
+
+          <section class="translator">
+            <article class="pane">
+              <div class="pane-header">
+                <span class="pane-label">來源格式</span>
+                <span id="sourceBadge" class="type-badge muted">尚未上傳</span>
+              </div>
+
+              <div class="dropzone" id="dropzone" role="button" tabindex="0" aria-controls="fileInput">
+                <input id="fileInput" type="file" hidden />
+                <div class="dropzone-icon">+</div>
+                <div>
+                  <strong>拖曳檔案到這裡，或點一下選擇檔案</strong>
+                  <p>適合 `txt`、`json`、`csv`、`md`、`html`、`xml`、`xlsx`、`jpg`、`png`、`webp`、`pdf`，以及可接受輕量結果的 `docx`、`pptx`。</p>
+                  <span class="dropzone-hint">選擇檔案</span>
+                </div>
+              </div>
+
+              <div class="file-meta">
+                <div>
+                  <span class="meta-label">檔名</span>
+                  <strong id="fileName">-</strong>
+                </div>
+                <div>
+                  <span class="meta-label">大小</span>
+                  <strong id="fileSize">-</strong>
+                </div>
+                <div>
+                  <span class="meta-label">偵測</span>
+                  <strong id="detectedFormat">-</strong>
+                </div>
+              </div>
+
+              <div class="preview-card">
+                <div class="preview-header">
+                  <span>預覽 / 摘要</span>
+                  <button id="clearBtn" class="ghost-btn" type="button">清除</button>
+                </div>
+                <div id="previewContent" class="preview-content empty">
+                  上傳檔案後，這裡會顯示預覽、頁面縮圖或文字摘要。
+                </div>
+              </div>
+            </article>
+
+            <article class="pane">
+              <div class="pane-header">
+                <span class="pane-label">目標格式</span>
+                <span id="targetBadge" class="type-badge accent">請先選擇</span>
+              </div>
+
+              <div class="target-picker">
+                <label for="targetSelect">轉換成</label>
+                <select id="targetSelect" disabled>
+                  <option>請先上傳檔案</option>
+                </select>
+              </div>
+
+              <div class="capability-card compact-card">
+                <h3>可轉換格式</h3>
+                <div id="targetChips" class="chip-grid">
+                  <span class="chip muted">等待上傳檔案</span>
+                </div>
+              </div>
+
+              <div class="capability-card compact-card">
+                <h3>轉換說明</h3>
+                <div id="conversionNotes" class="notes-list">
+                  上傳檔案後，這裡會顯示相容性與可能的限制。
+                </div>
+              </div>
+
+              <button id="convertBtn" class="primary-btn" type="button" disabled>開始轉換</button>
+            </article>
+          </section>
+
+          <section class="bottom-grid">
+            <article class="result-card">
+              <div class="result-header">
+                <div>
+                  <span class="pane-label">轉換結果</span>
+                  <h3 id="resultTitle">尚未產生輸出檔</h3>
+                </div>
+                <a id="downloadBtn" class="primary-btn disabled" download>下載檔案</a>
+              </div>
+              <div id="resultSummary" class="result-summary">
+                轉換完成後，這裡會顯示輸出格式、檔名與處理摘要。
+              </div>
+            </article>
+
+            <article class="support-card">
+              <span class="pane-label">目前適合本地轉換</span>
+              <h3>這些格式會直接在瀏覽器處理</h3>
+              <ul id="supportList"></ul>
+            </article>
+          </section>
+        </section>
+
+        <section class="section-block">
+          <div class="section-head">
+            <div>
+              <p class="section-tag">區塊 2</p>
+              <h2>高保真 Office 轉 PDF</h2>
+            </div>
+            <p class="section-desc">
+              如果你希望完整保留版面、圖片、字型與投影片樣式，這類轉換需要專業文件引擎。
+              目前這一版不在瀏覽器內硬做低品質轉換，而是先提供高保真入口與後續擴充位置。
+            </p>
+          </div>
+
+          <div class="office-grid" id="officeGrid"></div>
+
+          <article class="office-note">
+            <h3>說明</h3>
+            <p>
+              這一區目前不是本地高保真轉換器。點擊後會前往外部專業服務，或保留給未來串接 API / 後端時使用。
+              這樣可以先維持工具輕量、好部署，也避免讓使用者誤以為目前已經能在瀏覽器內完美轉 Office 成 PDF。
+            </p>
+          </article>
+        </section>
+      </main>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://unpkg.com/mammoth@1.8.0/mammoth.browser.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+    <script src="https://unpkg.com/docx@8.5.0/build/index.umd.js"></script>
+    <script src="./app.js"></script>
+  </body>
+</html>
